@@ -1,0 +1,42 @@
+# Portable git config, symlinked to ~/.gitconfig by steps/shared/10-symlinks.sh.
+#
+# NO [user] SECTION ON PURPOSE. Identity is set per repository, which is how
+# this machine already worked, and it keeps an email address out of a git repo.
+# Set a global one by hand if you ever want it:
+#
+#     git config --global user.name  "Your Name"
+#     git config --global user.email "you@example.com"
+#
+# Careful: ~/.gitconfig is a symlink into this repo, so `git config --global`
+# writes THROUGH it and shows up as a diff here. For anything machine-specific
+# or private, use ~/.config/git/config instead — git reads it in addition to
+# this file, and it is untracked. Note it is read BEFORE this file, so a key set
+# in both is won by this one.
+#
+# Commit signing is deliberately absent. The upstream this is forked from signs
+# via 1Password's op-ssh-sign, which does not exist on a Coder workspace or in a
+# container, and commit.gpgsign = true there makes every commit fail rather than
+# quietly go unsigned.
+
+[init]
+	defaultBranch = main
+
+# delta, installed by mise. Set here rather than by a step so there is one
+# source of truth.
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+
+# gh as the credential helper, found on PATH rather than by absolute path so
+# this works on Linux and macOS alike. The empty helper first clears any
+# inherited default. steps/shared/26-bash-path.sh is what guarantees gh is on
+# PATH even in shells that never reach zsh.
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential

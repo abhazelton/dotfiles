@@ -1,0 +1,19 @@
+# Only what differs from atuin's defaults. The full commented reference lives at
+# https://docs.atuin.sh/configuration/config/ — copying it here would pin a
+# snapshot of atuin's defaults and quietly go stale.
+#
+# Sync is deliberately not enabled: history stays on the machine.
+
+## atuin's default, spelled out because the upstream this is forked from sets it
+## to false. true = Enter runs the selected command, Tab puts it on the prompt
+## for editing.
+enter_accept = true
+
+[search]
+## THE IMPORTANT ONE. atuin records which shell ran each command, and the
+## default, "auto", shows only commands from the shell you are in right now.
+## Switch a machine from bash to zsh and your entire history appears to vanish
+## from the search UI while sitting untouched in the database — which is exactly
+## what happened on 2026-08-31 (208 of 218 rows were recorded as bash).
+## "all" shows every command whatever shell ran it.
+shells = "all"
