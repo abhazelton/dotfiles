@@ -28,11 +28,20 @@ $marker
 [ -d \"\$HOME/.local/share/mise/shims\" ] && export PATH=\"\$HOME/.local/share/mise/shims:\$PATH\"
 "
 
+# Tracks whether the block landed anywhere. A slim container image ships
+# neither file, and without this the step would report success having done
+# nothing at all — which is how it first passed a test against an empty $HOME.
+wrote=0
+
 for rc in "$HOME/.bashrc" "$HOME/.profile"; do
   [ -f "$rc" ] || continue
 
+  # `wrote` before `continue`: an rc file that already has the block still
+  # counts as handled, or the fallback below appends a second copy on every
+  # re-run. That is exactly what the first version of this step did.
   if grep -qF "$marker" "$rc"; then
     info "$(basename "$rc") already has it"
+    wrote=1
     continue
   fi
 
@@ -49,7 +58,15 @@ for rc in "$HOME/.bashrc" "$HOME/.profile"; do
     printf '%s\n' "$block" >> "$rc"
     ok "$(basename "$rc") — appended"
   fi
+  wrote=1
 done
+
+# Neither file existed. Create ~/.profile: every POSIX login shell reads it,
+# including the dash that /bin/sh points at on Debian and Ubuntu.
+if [ "$wrote" = 0 ]; then
+  printf '%s\n' "$block" >> "$HOME/.profile"
+  ok ".profile — created (no shell rc file existed)"
+fi
 
 if [ -d "$shims" ]; then
   ok "shims dir exists: $shims"
