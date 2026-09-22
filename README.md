@@ -26,18 +26,6 @@
 
 ---
 
-> **Forked from [jakallergis/dotfiles](https://github.com/jakallergis/dotfiles)**
-> on 2026-08-31. Nearly all of the design, the installer and the prose below are
-> his work; the upstream repo carries no licence, so this copy is private and is
-> not a redistribution. What is different here is listed in
-> [Changes from upstream](#changes-from-upstream) — read that first if you know
-> the original.
->
-> Not carried over: `settings/` (the upstream author's exported iTerm2, Alfred,
-> Xcode and WebStorm preferences), `fonts/font.zip` (Operator Mono, a commercial
-> typeface that cannot be redistributed), his git identity and SSH signing key,
-> and his `.agents/.skill-lock.json` tool state.
-
 Most dotfiles repos are a pile of symlinks and a `README` that says "run
 `./install.sh`". This one is that too — but the installer is 240 lines of plain
 bash with no library behind it, every tool comes from one version manager, and
@@ -486,23 +474,22 @@ not touch your rc files, put decoy `.zshrc`/`.bashrc`/`.profile` in a fake
   clone step, and they restore *layout* rather than running processes — an agent
   mid-task is gone either way. Worth revisiting once the workspaces have shown
   how often they actually stop.
-- **The prefix is <kbd>Ctrl</kbd>+<kbd>a</kbd>**, changed from upstream's stock
-  Ctrl-b. Upstream's reasoning for stock is good — every tmux answer online
-  applies unedited — and this is muscle memory winning anyway. `send-prefix`
-  keeps Ctrl-a Ctrl-a as beginning-of-line. Three lines in section 4 of
-  `tmux.conf` to change it back.
+- **The prefix is <kbd>Ctrl</kbd>+<kbd>a</kbd>**, not tmux's stock Ctrl-b. The
+  case for stock is good — every tmux answer online applies unedited — and this
+  is muscle memory winning anyway. `send-prefix` keeps Ctrl-a Ctrl-a as
+  beginning-of-line. Three lines in section 4 of `tmux.conf` to change it back.
 
-# Changes from upstream
+# Design notes
 
-Every one of these came out of installing upstream onto a Coder workspace on
+Every one of these came out of installing this onto a Coder workspace on
 2026-08-31 and finding what it did to a machine that already had opinions. The
 reasons are worth more than the diffs.
 
 ## Identity and secrets are not tracked
 
-`config/shared/.gitconfig` upstream carries `user.email`, `user.name`, an SSH
-`signingkey` and `commit.gpgsign = true`. Symlinked onto a new machine that is
-what you get: commits authored as someone else, and — because the signing
+A tracked `.gitconfig` carrying `user.email`, `user.name`, an SSH `signingkey`
+and `commit.gpgsign = true` is a trap. Symlinked onto a new machine that is what
+you get: commits authored as whoever wrote the file, and — because the signing
 binary is 1Password's `op-ssh-sign`, which exists on neither a Coder workspace
 nor a container — every commit failing outright rather than quietly going
 unsigned.
@@ -522,11 +509,11 @@ Two settings, one of which is the single most confusing thing in this repo.
 its default, `"auto"`, shows only commands from the shell you are in right now.
 Move a machine from bash to zsh — which is exactly what `./install.sh` does —
 and the interactive search goes empty while the database sits untouched. On the
-machine this fork came from that hid 208 of 218 commands. Nothing is lost and
+machine this was written on that hid 208 of 218 commands. Nothing is lost and
 nothing needs importing; it is a filter. `"all"` turns it off.
 
-**`enter_accept = true`.** atuin's own default, spelled out because upstream
-sets it to false. Enter runs the selected command; Tab puts it on the prompt.
+**`enter_accept = true`.** atuin's own default, spelled out rather than left
+implicit. Enter runs the selected command; Tab puts it on the prompt.
 
 **`.zshrc.d/atuin.zsh` puts the up arrow back on atuin.** `~/.zshrc` sets
 `ATUIN_NOBIND=true` and then binds Ctrl+R alone, which leaves the up key on
@@ -538,9 +525,9 @@ drop-in restores that.
 
 ## tmux: the two-file trap, and the prefix
 
-`steps/shared/11-stray-tmux-conf.sh` is new. tmux reads `/etc/tmux.conf`, then
-`~/.tmux.conf`, then `~/.config/tmux/tmux.conf`, and it loads **every one that
-exists** rather than stopping at the first. A `~/.tmux.conf` predating this repo
+`steps/shared/11-stray-tmux-conf.sh` exists for this. tmux reads
+`/etc/tmux.conf`, then `~/.tmux.conf`, then `~/.config/tmux/tmux.conf`, and it
+loads **every one that exists** rather than stopping at the first. A `~/.tmux.conf` predating this repo
 therefore does not lose to the tracked config — it wins every option the tracked
 file does not set, and loses every option it does, producing a hybrid nobody
 wrote. Step 10 does not catch it, because it only moves aside files that
@@ -550,12 +537,12 @@ the prefix afterwards, leaving a session with no working prefix.
 
 Also folded in from that machine: prefix <kbd>Ctrl</kbd>+<kbd>a</kbd>, the
 no-prefix <kbd>Alt</kbd> pane and window bindings, `window-size latest`, and
-`escape-time 0` rather than upstream's 10.
+`escape-time 0` rather than the stock 10.
 
 ## mise on PATH for bash, not just zsh
 
-`steps/shared/26-bash-path.sh` is new. `mise activate` lives in `~/.zshrc` and
-nowhere else, so node, yarn and tmux are invisible to every shell that never
+`steps/shared/26-bash-path.sh` handles this. `mise activate` lives in `~/.zshrc`
+and nowhere else, so node, yarn and tmux are invisible to every shell that never
 reaches zsh: `bash -lc`, cron, CI, and coding agents that run their tools
 through a non-interactive bash. It prepends mise's shims directory to PATH in
 `~/.bashrc` and `~/.profile` — both untracked machine files, which is the only
@@ -564,10 +551,11 @@ trampoline so the line is reached before the handover.
 
 ## yarn and pnpm
 
-`steps/shared/56-corepack.sh` is new. Upstream's mise config installs node and
+`steps/shared/56-corepack.sh` closes a gap. The mise config installs node and
 bun but no yarn, while `.zshrc` adds yarn's bin directories to PATH — so the
-tooling is expected but never arrives. Adding `yarn` to the mise tool list would
-pin one global version that then fights every project's `packageManager` field,
+tooling is expected but would never arrive. Adding `yarn` to the mise tool list
+would pin one global version that then fights every project's `packageManager`
+field,
 so this runs `corepack enable` instead: node's own supported mechanism, which
 resolves the version each project actually asks for. `mise reshim` afterwards is
 required, because corepack writes into node's bin directory inside mise's
@@ -575,13 +563,13 @@ install tree.
 
 ## Claude Code settings
 
-`config/shared/.claude/settings.json` is this machine's, not upstream's — which
-enabled 17 plugins, three atuin hooks and its own statusline. The statusline
-script it calls is tracked alongside it as
+`config/shared/.claude/settings.json` is deliberately minimal — no plugin list,
+no hooks, just the statusline, theme and TUI settings. The statusline script it
+calls is tracked alongside it as
 `config/shared/.claude/statusline-command.sh`, and the command uses `$HOME`
 rather than an absolute path so it survives a different username.
 
-`steps/shared/45-claude.sh` still clones two ~23 MB collections of third-party
+`steps/shared/45-claude.sh` clones two ~23 MB collections of third-party
 agents and commands into `~/.claude`. Say no to that step if you do not want
 them; nothing else depends on it.
 

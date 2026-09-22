@@ -13,10 +13,10 @@
 # this file, and it is untracked. Note it is read BEFORE this file, so a key set
 # in both is won by this one.
 #
-# Commit signing is deliberately absent. The upstream this is forked from signs
-# via 1Password's op-ssh-sign, which does not exist on a Coder workspace or in a
-# container, and commit.gpgsign = true there makes every commit fail rather than
-# quietly go unsigned.
+# Commit signing is deliberately absent. Signing via 1Password's op-ssh-sign
+# needs a binary that does not exist on a Coder workspace or in a container, and
+# commit.gpgsign = true there makes every commit fail rather than quietly go
+# unsigned.
 
 [init]
 	defaultBranch = main

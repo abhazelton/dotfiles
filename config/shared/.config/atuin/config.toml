@@ -4,9 +4,9 @@
 #
 # Sync is deliberately not enabled: history stays on the machine.
 
-## atuin's default, spelled out because the upstream this is forked from sets it
-## to false. true = Enter runs the selected command, Tab puts it on the prompt
-## for editing.
+## atuin's default, spelled out rather than left implicit — it is the kind of
+## setting a tool or a tutorial will happily flip on you. true = Enter runs the
+## selected command, Tab puts it on the prompt for editing.
 enter_accept = true
 
 [search]
