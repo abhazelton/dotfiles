@@ -50,7 +50,28 @@
 # `reset`, but zsh enables it itself for safe multi-line pasting, so turning it
 # off here would quietly cost you that on every prompt to fix nothing.
 _reset_input_modes() {
-  printf '\033[?1000l\033[?1002l\033[?1003l\033[?1004l\033[?1005l\033[?1006l\033[?1015l\033[?25h'
+  local off=$'\e[?1000l\e[?1002l\e[?1003l\e[?1004l\e[?1005l\e[?1006l\e[?1015l\e[?25h'
+  print -rn -- "$off"
+
+  # Second copy, for the prompt that is inside tmux.
+  #
+  # The printf above does not reach the terminal there. tmux reads it, applies
+  # it to its model of this pane, and goes on driving the real terminal from its
+  # own idea of what the modes should be — so the stuck reporting outlives it.
+  # Wrapping the same bytes in tmux's DCS passthrough (allow-passthrough on, set
+  # in section 1 of the tmux config) hands them to the outer terminal untouched.
+  # Inner escapes have to be doubled; that is the passthrough's own escaping.
+  [[ -n $TMUX ]] || return
+  # Only when this tmux is not itself using the mouse. With mouse on there is
+  # nothing to fix — tmux is consuming the reports, which is why they are not
+  # landing in your shell as text — and withdrawing them would break its
+  # scrolling and pane clicks until the next redraw.
+  [[ $(command tmux show-options -gv mouse 2>/dev/null) == off ]] || return
+  # esc is a variable because zsh does not expand $'...' in the replacement half
+  # of ${//}: written inline it substitutes the seven literal characters $'\e\e'
+  # and the passthrough carries nonsense the terminal prints.
+  local esc=$'\e'
+  print -rn -- $'\ePtmux;'"${off//$esc/$esc$esc}"$'\e\\'
 }
 
 autoload -Uz add-zsh-hook
