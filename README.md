@@ -219,10 +219,16 @@ one line. Most tools can print just the delta — `git config --global --list`,
 
 ## Split config: tracked intent, generated machine facts
 
-`~/.gitconfig` is tracked (identity, ssh signing, delta, gh credential helper by
-PATH not by absolute path). The one value that cannot be portable — the path to
-1Password's `op-ssh-sign`, different on every OS — is written to
-**`~/.config/git/config`** by `steps/shared/40-git.sh`.
+`~/.gitconfig` is tracked (delta, gh credential helper by PATH not by absolute
+path — no identity and no signing, see [Design notes](#identity-and-secrets-are-not-tracked)).
+The one value that cannot be portable — the path to 1Password's `op-ssh-sign`,
+different on every OS — is written to **`~/.config/git/config`** by
+`steps/shared/40-git.sh`.
+
+That file is shared with you: it is where a global `[user]` identity goes. The
+step owns only `gpg.ssh.program` and edits it in place with `git config --file`,
+so anything added by hand survives a re-run. It used to be rewritten wholesale,
+which deleted exactly that.
 
 Git reads that file *in addition to* `~/.gitconfig`, and before it, so the
 tracked file wins any clash. Two things that do **not** work here, both tested:
