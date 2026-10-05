@@ -1,0 +1,26 @@
+onboarding = false
+
+[ui]
+sidebar_min_width = 32
+sidebar_max_width = 42
+
+[theme]
+name = "terminal"
+auto_switch = false
+
+[ui.sidebar.agents]
+row_gap = 1
+rows = [
+  ["state_icon",
+  ["agent"],
+  { token = "machine", fg = "#61afef", rules = [{ equals = "Local", ignore_case = true, fg = "#98c379" }, { contains = "coder", fg = "#c678dd" }] }, { token = "workspace", bold = true }, "tab"],
+]
+
+[ui.sidebar.agents.rows_by_agent]
+claude = [
+  ["state_icon",
+  { token = "workspace", bold = true },
+  { token = "machine", fg = "#61afef", rules = [{ equals = "Local", ignore_case = true, fg = "#98c379" }, { contains = "coder", fg = "#c678dd" }] },
+  "tab"],
+  ["terminal_title_stripped"],
+]
