@@ -3,6 +3,17 @@
     "type": "command",
     "command": "bash \"$HOME/.claude/statusline-command.sh\""
   },
+  "enabledPlugins": {
+    "brag@brag": true
+  },
+  "extraKnownMarketplaces": {
+    "brag": {
+      "source": {
+        "source": "github",
+        "repo": "latent-spaces/brag"
+      }
+    }
+  },
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
   "theme": "dark-ansi",

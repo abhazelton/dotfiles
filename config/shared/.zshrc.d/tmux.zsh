@@ -69,6 +69,9 @@ t() {
 #   $TMUX          tmux runs $SHELL for every new pane. Without this, the first
 #                  pane attaches to the session it is already in, forever.
 #   $STY           the same trap, one multiplexer along (GNU screen).
+#   $HERDR_ENV     and again for Herdr panes. A server started at boot would
+#                  otherwise create tmux from inside Herdr, and every tmux pane
+#                  would inherit HERDR_ENV/TERM_PROGRAM=herdr.
 #   interactive    `ssh host <cmd>`, scp, rsync and git-over-ssh all start a
 #                  shell, and none of them may be handed a full-screen program.
 #   -t 1           belt and braces for the same thing: no terminal, no tmux.
@@ -83,6 +86,7 @@ t() {
 _tmux_autoattach_wanted() {
   [[ ${DOTFILES_TMUX_AUTOATTACH:-1} == 1 ]] || return 1
   [[ -z $TMUX && -z $STY ]]                 || return 1
+  [[ ${HERDR_ENV:-} != 1 ]]                  || return 1   # a Herdr pane; see herdr.dev/docs/agents
   [[ -o interactive ]]                      || return 1
   [[ -t 1 ]]                                || return 1
   [[ $TERM != dumb ]]                       || return 1
